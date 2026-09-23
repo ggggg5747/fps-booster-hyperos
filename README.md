@@ -2,6 +2,21 @@
 
 Aplikacja webowa (PWA) + skrypty ADB/Termux do optymalizacji telefonu Xiaomi z HyperOS (Android 15) pod kątem gier.
 
+## 📲 Pobieranie APK
+
+Pobierz gotowy plik APK bezpośrednio na telefon:
+
+👉 **[Pobierz APK](https://www.perplexity.ai/computer/a/fps-booster-apk-download-gkFZzxVLTpKlYSH0fvIebA)**
+
+### Instalacja:
+1. Pobierz plik APK na telefon
+2. Włącz **"Instalowanie aplikacji z nieznanych źródeł"** (Ustawienia → Aplikacje → Zezwalaj na instalowanie z nieznanych źródeł)
+3. Otwórz pobrany plik `FPS_Booster_HyperOS.apk`
+4. Kliknij **"Zainstaluj"**
+5. Uruchom aplikację **FPS Booster** z ikony na ekranie głównym
+
+---
+
 ## 📱 Jak uruchomić aplikację (PWA)
 
 ### Na telefonie:

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0f">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>FPS Booster - HyperOS</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Nagłówek -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">⚡ FPS Booster</h1>
+                <span class="badge">HyperOS · Android 15</span>
+            </div>
+            <p class="subtitle">Optymalizator telefonu pod gry</p>
+        </header>
+
+        <!-- Status -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">Tryb:</span>
+                <span id="mode-display" class="status-value">Podgląd</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Root:</span>
+                <span id="root-display" class="status-value">Nie wykryto</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Zastosowano:</span>
+                <span id="applied-count" class="status-value">0</span>
+            </div>
+        </div>
+
+        <!-- Przełącznik trybu -->
+        <div class="mode-switcher">
+            <button class="mode-btn active" data-mode="guide" onclick="switchMode('guide')">📖 Poradnik</button>
+            <button class="mode-btn" data-mode="adb" onclick="switchMode('adb')">🔌 Komendy ADB</button>
+            <button class="mode-btn" data-mode="root" onclick="switchMode('root')">🔧 Root (Termux)</button>
+        </div>
+
+        <!-- Panel logów -->
+        <div class="log-panel" id="log-panel" style="display:none;">
+            <div class="log-header">
+                <span>📋 Dziennik operacji</span>
+                <button class="log-clear" onclick="clearLog()">Wyczyść</button>
+            </div>
+            <div class="log-content" id="log-content"></div>
+        </div>
+
+        <!-- Zawartość: Poradnik -->
+        <section id="content-guide" class="content active">
+            <!-- Animacje -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>✨ Skala animacji</h2>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-anim" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <p class="card-desc">Zmniejszenie skali animacji przyspiesza interfejs. Odbijane przez ADB.</p>
+                <div class="cmd-list">
+                    <div class="cmd-item">
+                        <code>settings put global window_animation_scale 0.5</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <code>settings put global transition_animation_scale 0.5</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <code>settings put global animator_duration_scale 0.5</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                </div>
+                <div class="restore-cmd">
+                    <span class="restore-label">↩ Przywróć:</span>
+                    <div class="cmd-item restore">
+                        <code>settings put global window_animation_scale 1.0 &amp;&amp; settings put global transition_animation_scale 1.0 &amp;&amp; settings put global animator_duration_scale 1.0</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Częstotliwość odświeżania -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📱 Częstotliwość odświeżania</h2>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-refresh">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <p class="card-desc">Wymusza maksymalną częstotliwość odświeżania (120 Hz). ⚠ Zwiększa zużycie baterii.</p>
+                <div class="cmd-list">
+                    <div class="cmd-item">
+                        <code>settings put system peak_refresh_rate 120</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <code>settings put system min_refresh_rate 120</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                </div>
+                <div class="restore-cmd">
+                    <span class="restore-label">↩ Przywróć (60 Hz):</span>
+                    <div class="cmd-item restore">
+                        <code>settings put system peak_refresh_rate 60 &amp;&amp; settings put system min_refresh_rate 60</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HyperOS Ustawienia -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🎮 HyperOS - Ustawienia gry</h2>
+                </div>
+                <p class="card-desc">Włącz ręcznie w Ustawieniach → HyperOS:</p>
+                <div class="checklist">
+                    <label class="check-item"><input type="checkbox" id="cl-turbo"><span>Game Turbo włączony (Ustawienia → Funkcje specjalne → Game Turbo)</span></label>
+                    <label class="check-item"><input type="checkbox" id="cl-perf"><span>Tryb wydajności włączony (Centrum bezpieczeństwa → Bateria → Wydajność)</span></label>
+                    <label class="check-item"><input type="checkbox" id="cl-120hz"><span>120 Hz włączone (Ustawienia → Ekran → Częstotliwość odświeżania)</span></label>
+                    <label class="check-item"><input type="checkbox" id="cl-osave"><span>Oszczędzanie baterii wyłączone podczas gry</span></label>
+                    <label class="check-item"><input type="checkbox" id="cl-memext"><span>Rozszerzenie pamięci wyłączone (jeśli 8+ GB RAM)</span></label>
+                    <label class="check-item"><input type="checkbox" id="cl-autostart"><span>Autostart wyłączony dla niepotrzebnych aplikacji (Ustawienia → Aplikacje → Autostart)</span></label>
+                    <label class="check-item"><input type="checkbox" id="cl-notif"><span>Powiadomienia pływające wyłączone podczas gry (Game Turbo → Ustawienia)</span></label>
+                </div>
+            </div>
+
+            <!-- Optymalizacja aplikacji -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔋 Optymalizacja baterii dla gier</h2>
+                </div>
+                <p class="card-desc">Ustaw grę na "Brak ograniczeń" w baterii:</p>
+                <div class="checklist">
+                    <label class="check-item"><input type="checkbox" id="cl-bat1"><span>Ustawienia → Aplikacje → [gra] → Bateria → Brak ograniczeń</span></label>
+                    <label class="check-item"><input type="checkbox" id="cl-bat2"><span>Wyłącz optymalizację baterii dla aplikacji gamingowych</span></label>
+                    <label class="check-item"><input type="checkbox" id="cl-bat3"><span>Wyłącz "Wstrzymaj działanie aplikacji w tle" dla gier</span></label>
+                </div>
+            </div>
+
+            <!-- Czyszczenie cache -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🧹 Czyszczenie pamięci podręcznej</h2>
+                </div>
+                <p class="card-desc">Ręcznie wyczyść cache gier i aplikacji:</p>
+                <div class="checklist">
+                    <label class="check-item"><input type="checkbox" id="cl-cache1"><span>Ustawienia → Aplikacje → [gra] → Pamięć → Wyczyść pamięć podręczną</span></label>
+                    <label class="check-item"><input type="checkbox" id="cl-cache2"><span>Centrum bezpieczeństwa → Oczyść → Pliki śmieci</span></label>
+                    <label class="check-item"><input type="checkbox" id="cl-cache3"><span>Wyłącz niepotrzebne aplikacje w tle (Reproducent zadań)</span></label>
+                </div>
+            </div>
+
+            <!-- Optymalizacja gry (ADB) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>⚡ Kompilacja gry pod kątem wydajności (ADB)</h2>
+                </div>
+                <p class="card-desc">Wpisz nazwę pakietu gry (np. com.tencent.ig dla PUBG):</p>
+                <div class="input-row">
+                    <input type="text" id="pkg-input" placeholder="com.tencent.ig" class="text-input">
+                    <button class="action-btn" onclick="generateCompileCmd()">Generuj komendę</button>
+                </div>
+                <div id="compile-output" class="cmd-output"></div>
+            </div>
+
+            <!-- Debloat (opcjonalne) -->
+            <div class="card warning-card">
+                <div class="card-header">
+                    <h2>📦 Debloat (zaawansowane)</h2>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggle-debloat" onchange="toggleDebloat()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <p class="card-desc warning-text">⚠ Wyłączanie aplikacji systemowych może spowodować problemy. Używaj ostrożnie.</p>
+                <div id="debloat-list" class="debloat-list" style="display:none;">
+                    <div class="debloat-item">
+                        <span>GetApps (sklep Xiaomi)</span>
+                        <div class="cmd-item">
+                            <code>pm disable-user --user 0 com.xiaomi.mipicks</code>
+                            <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                        </div>
+                        <div class="cmd-item restore">
+                            <code>pm enable com.xiaomi.mipicks</code>
+                            <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                        </div>
+                    </div>
+                    <div class="debloat-item">
+                        <span>Browser Xiaomi</span>
+                        <div class="cmd-item">
+                            <code>pm disable-user --user 0 com.android.browser</code>
+                            <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                        </div>
+                        <div class="cmd-item restore">
+                            <code>pm enable com.android.browser</code>
+                            <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                        </div>
+                    </div>
+                    <div class="debloat-item">
+                        <span>Asystent Xiaomi</span>
+                        <div class="cmd-item">
+                            <code>pm disable-user --user 0 com.miui.personalassistant</code>
+                            <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                        </div>
+                        <div class="cmd-item restore">
+                            <code>pm enable com.miui.personalassistant</code>
+                            <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                        </div>
+                    </div>
+                    <div class="debloat-item">
+                        <span>Mi Music</span>
+                        <div class="cmd-item">
+                            <code>pm disable-user --user 0 com.miui.player</code>
+                            <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                        </div>
+                        <div class="cmd-item restore">
+                            <code>pm enable com.miui.player</code>
+                            <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                        </div>
+                    </div>
+                    <div class="debloat-item">
+                        <span>Mi Video</span>
+                        <div class="cmd-item">
+                            <code>pm disable-user --user 0 com.miui.video</code>
+                            <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                        </div>
+                        <div class="cmd-item restore">
+                            <code>pm enable com.miui.video</code>
+                            <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Zawartość: ADB -->
+        <section id="content-adb" class="content">
+            <div class="info-banner">
+                <p>🔌 Podłącz telefon do PC kablem USB. Włącz <strong>Debugowanie USB</strong> w Opcjach programisty.</p>
+                <p>Pobierz <a href="https://developer.android.com/tools/releases/platform-tools" target="_blank" class="link">Android Platform Tools</a> i wypakuj do folderu z plikami.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>🚀 Skrypt ADB Boost</h2>
+                </div>
+                <p class="card-desc">Uruchom <code>adb_boost.bat</code> na PC z podłączonym telefonem. Skrypt:</p>
+                <ul class="feature-list">
+                    <li>✅ Zmniejsza skale animacji (0.5x)</li>
+                    <li>✅ Opcjonalnie wymusza 120 Hz</li>
+                    <li>✅ Czyści pamięć podręczną DNS</li>
+                    <li>✅ Opcjonalnie wyłącza aplikacje bloatware</li>
+                </ul>
+                <div class="action-row">
+                    <button class="action-btn primary" onclick="downloadScript('adb_boost.bat')">⬇ Pobierz adb_boost.bat</button>
+                    <button class="action-btn danger" onclick="downloadScript('adb_restore.bat')">⬇ Pobierz adb_restore.bat</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Komendy ręczne (ADB)</h2>
+                </div>
+                <p class="card-desc">Skopiuj i wklej do wiersza poleceń (wymaga adb w PATH):</p>
+                <div class="cmd-list">
+                    <div class="cmd-item">
+                        <span class="cmd-label">Sprawdź połączenie:</span>
+                        <code>adb devices</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <span class="cmd-label">Animacja okien 0.5x:</span>
+                        <code>adb shell settings put global window_animation_scale 0.5</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <span class="cmd-label">Animacja przejść 0.5x:</span>
+                        <code>adb shell settings put global transition_animation_scale 0.5</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <span class="cmd-label">Czas trwania animatora 0.5x:</span>
+                        <code>adb shell settings put global animator_duration_scale 0.5</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <span class="cmd-label">Wymuś 120 Hz:</span>
+                        <code>adb shell settings put system peak_refresh_rate 120 &amp;&amp; adb shell settings put system min_refresh_rate 120</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <span class="cmd-label">Wyczyść DNS:</span>
+                        <code>adb shell ndc resolver flushdefaultif</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <span class="cmd-label">Przywróć animacje 1.0x:</span>
+                        <code>adb shell settings put global window_animation_scale 1.0 &amp;&amp; adb shell settings put global transition_animation_scale 1.0 &amp;&amp; adb shell settings put global animator_duration_scale 1.0</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Zawartość: Root -->
+        <section id="content-root" class="content">
+            <div class="info-banner warning">
+                <p>⚠ Tryb root jest opcjonalny i ryzykowny. Używasz na własną odpowiedzialność.</p>
+                <p>Wymaga Magisk lub innego roota + aplikacji Termux (z pakietem tsu).</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔧 Skrypt Termux Root</h2>
+                </div>
+                <p class="card-desc">Skopiuj <code>termux_root_boost.sh</code> do telefonu i uruchom w Termux:</p>
+                <ul class="feature-list">
+                    <li>✅ Wykrywa root (su)</li>
+                    <li>✅ Wykrywa governor CPU i przełącza na performance</li>
+                    <li>✅ Czyści pamięć podręczną</li>
+                    <li>✅ Opcjonalnie wyłącza bloatware</li>
+                    <li>✅ Zapisuje backup ustawień do przywrócenia</li>
+                </ul>
+                <div class="action-row">
+                    <button class="action-btn primary" onclick="downloadScript('termux_root_boost.sh')">⬇ Pobierz termux_root_boost.sh</button>
+                    <button class="action-btn danger" onclick="downloadScript('termux_root_restore.sh')">⬇ Pobierz termux_root_restore.sh</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Komendy root (Termux)</h2>
+                </div>
+                <p class="card-desc">Uruchom Termux z rootem (tsu), potem wklej komendy:</p>
+                <div class="cmd-list">
+                    <div class="cmd-item">
+                        <span class="cmd-label">Sprawdź governor CPU:</span>
+                        <code>cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <span class="cmd-label">Ustaw governor na performance:</span>
+                        <code>echo performance | su -c 'tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor'</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <span class="cmd-label">Wyczyść pamięć podręczną:</span>
+                        <code>sync &amp;&amp; echo 3 | su -c 'tee /proc/sys/vm/drop_caches'</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <span class="cmd-label">Włącz Tryb Gry:</span>
+                        <code>settings put system game_mode 1</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <span class="cmd-label">Wyłącz animacje:</span>
+                        <code>settings put global window_animation_scale 0.5 &amp;&amp; settings put global transition_animation_scale 0.5 &amp;&amp; settings put global animator_duration_scale 0.5</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                    <div class="cmd-item">
+                        <span class="cmd-label">Przywróć governor (powersave/schedutil):</span>
+                        <code>echo schedutil | su -c 'tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor'</code>
+                        <button class="copy-btn" onclick="copyCmd(this)">📋</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card warning-card">
+                <div class="card-header">
+                    <h2>⚠ Czego NIE robić</h2>
+                </div>
+                <ul class="feature-list danger-list">
+                    <li>❌ Nie wyłączaj thermal throttling (ryzyko uszkodzenia telefonu)</li>
+                    <li>❌ Nie usuwaj aplikacji systemowych (pm uninstall)</li>
+                    <li>❌ Nie zmieniaj ustawień jądra/SELinux</li>
+                    <li>❌ Nie zabijaj procesów systemowych</li>
+                    <li>❌ Nie zmieniaj ustawień GPU na sztywno (różne urządzenia)</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Przycisk akcji -->
+        <div class="action-bar">
+            <button class="big-btn primary" onclick="applyAll()">🚀 ZAZNACZ WSZYSTKIE ZROBIONE</button>
+            <button class="big-btn danger" onclick="resetAll()">↩ RESET</button>
+        </div>
+
+        <!-- Stopka -->
+        <footer class="footer">
+            <p>FPS Booster PL · HyperOS · Android 15</p>
+            <p class="footer-warn">Brak gwarancji wzrostu FPS. Aplikacja nie modyfikuje systemu bezpośrednio - służy jako przewodnik i generator komend.</p>
+        </footer>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
